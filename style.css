@@ -1,0 +1,26 @@
+#main{
+  width:100%;
+  max-width:600px;
+  position: fixed;
+  left:50%;
+  transform: translateX(-50%);
+  top:16px;
+  bottom:16px;
+}
+#main > .container{
+  width:100%;
+  position:absolute;
+  top:60px;
+  bottom:0px;
+  overflow-y: scroll;
+}
+#app{
+  position: fixed;
+  top:0px;
+  bottom:0px;
+  left:0px;
+  right:0px;
+}
+.detail-buttons > .col{
+  text-align:center
+}

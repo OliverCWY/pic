@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-Hans" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>哔咔漫画</title>
+    <link href="//fonts.proxy.ustclug.org/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <!--<link href="//use.fontawesome.com/releases/v5.0.13/css/all.css" rel="stylesheet">-->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/material-design-icons/3.0.1/iconfont/material-icons.min.css">
+    <link href="//cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+  </head>
+  <body>
+    <div id="app" style="display:none"><v-app>
+
+      <v-card id="main">
+        <v-app-bar app fixed><v-row width="100%" style="top:10px;position:relative;" no-gutters>
+          <v-col cols=7>
+            <v-text-field id="_search" v-model="keyword" append-outer-icon="search" @click:append-outer="search()" @keydown="key_down_search" label="搜索"></v-text-field>
+            <v-menu activator="#_search" offset-y width="100%">
+              <v-list dense>
+                <v-subheader>大家都在搜</v-subheader>
+                <v-list-item v-for="key in keywords" dense @click="keyword=key;search()">
+                  <v-list-item-content>
+                    <v-list-item-title v-text="key"></v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </v-col>
+          <v-spacer>
+          </v-spacer>
+          <v-col cols="2" v-if="type=='comics'" style="top:4px;position:relative">
+              <abbr id="_sort">{{sorts[sort]}}</abbr>
+              <v-menu activator="#_sort" offset-y width="100%">
+                <v-list dense>
+                  <v-subheader>排序方式</v-subheader>
+                  <v-list-item v-for="s1,s2 in sorts" dense @click="sort=s2;reload_comics()">
+                    <v-list-item-content>
+                      <v-list-item-title v-text="s1"></v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+          </v-col>
+          <v-col cols="2" v-if="type=='images'" style="top:4px;position:relative">
+              <abbr id="_quality">{{qualities[quality]}}</abbr>
+              <v-menu activator="#_quality" offset-y width="100%">
+                <v-list dense>
+                  <v-subheader>图片质量</v-subheader>
+                  <v-list-item v-for="s1,s2 in qualities" dense @click="quality=s2;reload_images()">
+                    <v-list-item-content>
+                      <v-list-item-title v-text="s1"></v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+          </v-col>
+          <v-col cols="1" v-if="page!=null">
+            <v-text-field @keydown="key_down_page" v-model="page" width="100%"></v-text-field></v-col>
+          </v-col>
+          <v-col cols="1" v-if="page!=null" style="top:4px;position:relative">
+            /{{max_pages}}
+          </v-col>
+        </v-row></v-app-bar>
+        <v-container v-if="type=='login'">
+          <h3>登陆</h3>
+          <v-text-field clearable no-filter @keydown="(e)=>{if(e.keyCode==13)login();}" v-model="logins.username" prepend-outer-icon="account" label="用户名"></v-text-field>
+          <v-text-field clearable no-filter @keydown="(e)=>{if(e.keyCode==13)login();}" v-model="logins.password" prepend-outer-icon="lock" label="密码"></v-text-field>
+          <v-btn @click="login()" color="primary">登陆</v-btn>
+          <v-snackbar v-model="snackbar.enabled" :timeout="snackbar.timeout" :color="snackbar.color">
+            <div style="height:100%;width:100%;text-align:center">{{ snackbar.text }}</div>
+          </v-snackbar>
+        </v-container>
+        <v-container v-if="type=='main'">
+          <v-row>
+            <v-col cols="3" v-on:click="load_comics({favourites:1})" style="text-align:center">
+              <lazy-loading-img src="star.svg" aspect-ratio="1"></lazy-loading-img>
+              我的收藏
+            </v-col>
+            <v-col cols="3" v-for="cat in cats" style="text-align:center" v-on:click="load_comics({category_name:cat.title})" v-ripple>
+              <lazy-loading-img :src="cat.thumb" aspect-ratio="1"></lazy-loading-img>
+              {{cat.title}}
+            </v-col>
+          </v-row>
+        </v-container>
+        <v-slide-x-reverse-transition><v-container v-if="type=='comics'" v-scroll.self="on_comics_scroll">
+          <v-container v-for="comic in comics.docs">
+            <v-row v-on:click="load_comic(comic._id)" v-ripple>
+              <v-col cols="3">
+                <lazy-loading-img :src="comic.thumb" aspect-ratio="0.75"></lazy-loading-img>
+              </v-col>
+              <v-col cols="9">
+                <h3>{{comic.title}}</h3>
+                <p>{{comic.author}}</p>
+                <p>{{comic.chineseTeam}}</p>
+                <abbr style="color:grey" v-for='cat in comic.categories'>{{cat+" "}}</abbr><br>
+                <v-row>
+                  <v-col cols="6"><v-icon>visibility</v-icon> {{comic.totalViews}}</v-col>
+                  <v-col cols="6"><v-icon>favorite</v-icon> {{comic.totalLikes}}</v-col>
+                </v-row>
+              </v-col>
+            </v-row>
+            <v-divider></v-divider>
+          </v-container>
+        </v-container></v-slide-x-reverse-transition>
+        <v-slide-x-reverse-transition><v-container v-if="type=='detail'" transition="slide-x-reverse-transition"><v-container v-if="detail!={}">
+          <v-row>
+            <v-col cols="3">
+              <lazy-loading-img :src="detail.thumb"/>
+            </v-col>
+            <v-col cols="9">
+              <h3>{{detail.title}}({{detail.pagesCount}}P)</h3>
+              <p>{{detail.author}}</p>
+              <p>{{detail.chineseTeam}}</p>
+              <v-row><v-chip style="color:grey" v-for='cat in detail.categories' class="mx-1" x-small pill ripple @click="search(cat)">{{cat}}</v-chip></v-row>
+              <div style="width:100%;height:10px"></div>
+              <v-row><v-chip style="color:grey" v-for='tag in detail.tags' class="mx-1" x-small pill ripple @click="search(tag)">{{tag}}</v-chip></v-row>
+            </v-col>
+          </v-row>
+          <v-row class="detail-buttons">
+            <v-col cols="4">
+              <v-icon large>visibility</v-icon>
+              <br>
+              {{detail.totalViews}}
+            </v-col>
+            <v-col cols="4">
+              <v-icon large color="pink" @click="like(detail._id)">{{detail.isLiked?"favorite":"favorite_border"}}</v-icon>
+              <br>
+              {{detail.totalLikes}}
+            </v-col>
+            <v-col cols="4">
+              <v-icon large color="#FFD700" @click="favourite(detail._id)">{{detail.isFavourite?"star":"star_border"}}</v-icon>
+              <br>
+              {{detail.isFavourite?"已收藏":"未收藏"}}
+            </v-col>
+            <v-col cols="4">
+            </v-col>
+          </v-row>
+          <v-row>
+              <v-col cols="3" v-for="ep in episodes" style="height:40px;" no-gutters>
+                <v-btn style="width:100%;overflow:hidden;" @click="load_images({bookId:detail._id,epsId:ep.order})">{{ep.title}}</v-btn>
+              </v-col>
+              <v-col cols=12><v-btn block @click="episode_page_now++;load_episode(detail._id,episode_page_now)">加载更多</v-btn></v-col>
+          </v-row>
+        </v-container></v-container></v-slide-x-reverse-transition>
+        <v-slide-x-reverse-transition><v-container v-if="type=='images'" v-scroll.self="on_images_scroll" transition="slide-x-reverse-transition">
+          <lazy-loading-img :src="url" v-for="url in images" style="min-height:60%"/>
+        </v-container></v-slide-x-reverse-transition>
+      </v-card>
+    </v-app></div>
+    <script src="//cdn.jsdelivr.net/npm/vue@2.x/dist/vue.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="js/main.js"></script>
+  </body>
+</html>
