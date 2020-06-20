@@ -1,4 +1,6 @@
 define(["components","communicate"],(components,B_)=>{
+  json_clone=(obj)=>JSON.parse(JSON.stringify(obj));
+  dict={}
   var B={};
   function loading(){
     var snackbar=global.snackbar;
@@ -128,7 +130,7 @@ define(["components","communicate"],(components,B_)=>{
         e=e.target;
         if(e.clientHeight+e.scrollTop-e.scrollHeight>=0){
           if(this.comics.page<this.comics.pages){
-            var args=JSON.parse(JSON.stringify(this.$route.query));
+            var args=json_clone(this.$route.query);
             args.page=this.comics.page+1;
             this.$router.replace({query:args});
           }else{
@@ -140,7 +142,7 @@ define(["components","communicate"],(components,B_)=>{
           }
         }else if(e.scrollTop<=0){
             if(this.comics.page>1){
-              var args=JSON.parse(JSON.stringify(this.$route.query));
+              var args=json_clone(this.$route.query);
               args.page=this.comics.page-1;
               this.$router.replace({query:args});
             }else{
@@ -154,11 +156,17 @@ define(["components","communicate"],(components,B_)=>{
       },
       load(){
         loading();
+        this.comics.docs=[];
         this.loading=true;
-        var args=JSON.parse(JSON.stringify(this.$route.query));
+        if(document.getElementById("scroll-comics"))document.getElementById("scroll-comics").children[0].style.display="none";
+        var args=json_clone(this.$route.query);
         if(!args.page)args.page=1;
         global.page=args.page;
         if(!args.s)args.s=global.sort;
+        else {
+          global.sort=args.s;
+          localStorage.setItem("sort",global.sort);
+        }
         B.comics(args).then((data)=>{
           console.log(data);
           if(data.code==200){
@@ -235,6 +243,8 @@ define(["components","communicate"],(components,B_)=>{
     methods:{
       load (){
         loading()
+        this.detail={};
+        this.eps.docs=[];
         B.info(this.$route.query.bookId).then((data)=>{
           if(data.code==200){
             global.snackbar.on=false;
@@ -381,7 +391,7 @@ define(["components","communicate"],(components,B_)=>{
         e=e.target;
         if(e.clientHeight+e.scrollTop-e.scrollHeight>=0){
           if(this.images.page<this.images.pages){
-            var args=JSON.parse(JSON.stringify(this.$route.query));
+            var args=json_clone(this.$route.query);
             args.page=parseInt(args.page)+1;
             this.$router.replace({query:args});
           }else{
@@ -393,7 +403,7 @@ define(["components","communicate"],(components,B_)=>{
           }
         }else if(e.scrollTop<=0){
             if(this.images.page>1){
-              var args=JSON.parse(JSON.stringify(this.$route.query));
+              var args=json_clone(this.$route.query);
               args.page=parseInt(args.page)-1;
               this.$router.replace({query:args});
             }else{
@@ -407,10 +417,17 @@ define(["components","communicate"],(components,B_)=>{
       },
       load(){
         loading();
-        var args=this.$route.query;
+        this.images.docs=[];
+        if(document.getElementById("scroll-image"))document.getElementById("scroll-image").children[0].style.display="none";
+        var args=json_clone(this.$route.query);
         if(!args.page)args.page=1;
         global.page=args.page;
-        B.images(this.$route.query).then((data)=>{
+        if(!args.quality)args.quality=global.quality;
+        else{
+          global.quality=args.quality;
+          localStorage.setItem("quality",global.quality);
+        }
+        B.images(args).then((data)=>{
           if(data.code==200){
             global.snackbar.on=false;
             data=data.data.pages;

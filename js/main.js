@@ -6,11 +6,15 @@ require.config({
 });
 
 require(["router","communicate"],(router,b)=>{
+  var sort=localStorage.getItem("sort");
+  var quality=localStorage.getItem("quality");
+  if(!sort)sort="dd";
+  if(!quality)quality="original";
   window.global={
-    sort:"dd",
+    sort:sort,
     page:1,
     pages:1,
-    quality:"original",
+    quality:quality,
     snackbar:{
       on:false,
       timeout:1000,
@@ -19,6 +23,8 @@ require(["router","communicate"],(router,b)=>{
     },
     url_list:["/"]
   }
+  localStorage.setItem("sort",sort);
+  localStorage.setItem("quality",quality);
   const app=new Vue({
     router,
     vuetify:new Vuetify(),
@@ -47,10 +53,12 @@ require(["router","communicate"],(router,b)=>{
       reload_comics(){
         var args=JSON.parse(JSON.stringify(this.$route.query));
         args.s=global.sort;
-        args.page=global.page;
+        localStorage.setItem("sort",global.sort);
+        args.page=1;
         this.$router.replace({query:args})
       },
       reload_images(){
+        localStorage.setItem("quality",global.quality);
         if(this.$route.name=="images"){
           var args=JSON.parse(JSON.stringify(this.$route.query));
           args.quality=this.global.quality;
