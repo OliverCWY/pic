@@ -33,3 +33,15 @@
   text-align:center;
   padding-top:3px;
 }
+
+@media screen and (max-width: 500px){
+  #main{
+    width:100%;
+    max-width:600px;
+    position: fixed;
+    left:50%;
+    transform: translateX(-50%);
+    top:0px;
+    bottom:0px;
+  }
+}
