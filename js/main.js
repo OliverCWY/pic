@@ -29,7 +29,7 @@ require(["router","communicate"],(router,b)=>{
     router,
     vuetify:new Vuetify(),
     data:{
-      keywords:[123,3435],
+      keywords:[],
       keyword:"",
       sorts:{
         "dd":"新到旧",
@@ -73,6 +73,8 @@ require(["router","communicate"],(router,b)=>{
       }
     }
   }).$mount("#app");
+  b.keywords().then((data)=>{
+    if(data.code==200)app.keywords=data.data.keywords;
+  });
   document.getElementById("app").style.display=null;
-  window.V=app;
 });

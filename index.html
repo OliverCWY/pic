@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hans" dir="ltr">
   <head>
+    <link rel="icon" href="icon.jpg" type="image/jpg">
     <meta charset="utf-8">
     <title>哔咔漫画</title>
     <link href="//fonts.proxy.ustclug.org/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
@@ -29,7 +30,7 @@
           </v-col>
           <v-spacer>
           </v-spacer>
-          <v-col cols="3" v-if="$route.name=='comics'" style="top:4px;position:relative;text-align:right">
+          <v-col cols="3" v-if="$route.name=='comics'" style="top:4px;position:relative;text-align:right;padding-right:10px;">
               <abbr id="_sort">{{sorts[global.sort]}}</abbr>
               <v-menu activator="#_sort" offset-y width="100%">
                 <v-list dense>
@@ -42,7 +43,7 @@
                 </v-list>
               </v-menu>
           </v-col>
-          <v-col cols="3" v-if="$route.name=='images'||$route.name=='detail'" style="top:4px;position:relative;text-align:right">
+          <v-col cols="3" v-if="$route.name=='images'||$route.name=='detail'" style="top:4px;position:relative;text-align:right；padding-right:10px;">
               <abbr id="_quality">{{qualities[global.quality]}}</abbr>
               <v-menu activator="#_quality" offset-y width="100%">
                 <v-list dense>
