@@ -125,34 +125,31 @@ define(["components","communicate"],(components,B_)=>{
       loading:false
     }},
     methods:{
-      scrollHandler (e){
-        if(this.loading||this.comics.docs.length==0)return;
-        e=e.target;
-        if(e.clientHeight+e.scrollTop-e.scrollHeight>=0){
-          if(this.comics.page<this.comics.pages){
-            var args=json_clone(this.$route.query);
-            args.page=this.comics.page+1;
+      load_next(){
+          var args=json_clone(this.$route.query);
+          if(!args.page)args.page=this.comics.page;
+          if(args.page<this.comics.pages){
+            args.page=parseInt(args.page)+1;
+            this.$router.replace({query:args});
+          }else{
+              var snackbar=global.snackbar;
+              snackbar.color="info";
+              snackbar.message="已是最后一页";
+              snackbar.timeout=1000
+          };
+      },
+      load_prev(){
+          var args=json_clone(this.$route.query);
+          if(args.page>1){
+            args.page=parseInt(args.page)-1;
             this.$router.replace({query:args});
           }else{
             var snackbar=global.snackbar;
             snackbar.color="info";
-            snackbar.message="已是最后一页";
+            snackbar.message="已是第一页";
             snackbar.timeout=1000;
             snackbar.on=true;
           }
-        }else if(e.scrollTop<=0){
-            if(this.comics.page>1){
-              var args=json_clone(this.$route.query);
-              args.page=this.comics.page-1;
-              this.$router.replace({query:args});
-            }else{
-              var snackbar=global.snackbar;
-              snackbar.color="info";
-              snackbar.message="已是第一页";
-              snackbar.timeout=1000;
-              snackbar.on=true;
-            }
-        }
       },
       load(){
         loading();
@@ -177,7 +174,7 @@ define(["components","communicate"],(components,B_)=>{
             global.pages=data.pages;
             setTimeout(()=>{
               document.getElementById("scroll-comics").children[0].style.display="";
-              document.getElementById("scroll-comics").scrollTop=30;
+              document.getElementById("scroll-comics").scrollTop=51;
             })
             this.loading=false;
           }else{
@@ -206,8 +203,8 @@ define(["components","communicate"],(components,B_)=>{
       this.load()
     },
     template:`
-    <v-container id="scroll-comics" class="py-0" v-scroll.self="scrollHandler">
-      <div style="display:none;" class="drag-bar">上一页</div>
+    <v-container class="py-0" id="scroll-comics">
+      <div style="display:none;margin-bottom:12px" class="drag-bar" @click="load_prev">上一页</div>
       <v-container v-for="comic in comics.docs">
         <v-row v-on:click="load_comic(comic._id)" v-ripple>
           <v-col cols="3">
@@ -226,7 +223,7 @@ define(["components","communicate"],(components,B_)=>{
         </v-row>
         <v-divider></v-divider>
       </v-container>
-      <div v-if="comics.docs.length>0" class="drag-bar">下一页</div>
+      <div v-if="comics.docs.length>0" class="drag-bar" style="margin-top:12px" @click="load_next">下一页</div>
     </v-container>
     `
   },
@@ -386,26 +383,40 @@ define(["components","communicate"],(components,B_)=>{
       loading:false,
     }},
     methods:{
-      scrollHandler (e){
-        if(this.loading||this.images.docs.length==0)return;
-        e=e.target;
-        if(e.clientHeight+e.scrollTop-e.scrollHeight>=0){
-          if(this.images.page<this.images.pages){
-            var args=json_clone(this.$route.query);
+      load_next(){
+          var args=json_clone(this.$route.query);
+          if(!args.page)args.page=this.images.page;
+          if(args.page<this.images.pages){
             args.page=parseInt(args.page)+1;
             this.$router.replace({query:args});
           }else{
-            var snackbar=global.snackbar;
-            snackbar.color="info";
-            snackbar.message="已是最后一页";
-            snackbar.timeout=1000;
-            snackbar.on=true;
+            args.page=1;
+            args.epsId=parseInt(args.epsId)+1;
+            loading();
+            var Router=this.$router;
+            B.images(args).then((data)=>{
+              if(data.code==200){
+                Router.push({query:args});
+              }else{
+                var snackbar=global.snackbar;
+                snackbar.color="info";
+                snackbar.message="已是最后一页";
+                snackbar.timeout=1000;
+                snackbar.on=true;
+              }
+            });
           }
-        }else if(e.scrollTop<=0){
-            if(this.images.page>1){
-              var args=json_clone(this.$route.query);
-              args.page=parseInt(args.page)-1;
-              this.$router.replace({query:args});
+      },
+      load_prev(){
+          var args=json_clone(this.$route.query);
+          if(!args.page)args.page=this.images.page;
+          if(args.page>1){
+            args.page=parseInt(args.page)-1;
+            this.$router.replace({query:args});
+          }else{
+            if(args.epsId>1){
+              args.epsId=parseInt(args.epsId)-1;
+              this.$router.replace({query:args})
             }else{
               var snackbar=global.snackbar;
               snackbar.color="info";
@@ -413,7 +424,7 @@ define(["components","communicate"],(components,B_)=>{
               snackbar.timeout=1000;
               snackbar.on=true;
             }
-        }
+          }
       },
       load(){
         loading();
@@ -436,7 +447,7 @@ define(["components","communicate"],(components,B_)=>{
             global.pages=data.pages;
             setTimeout(()=>{
               document.getElementById("scroll-image").children[0].style.display="";
-              document.getElementById("scroll-image").scrollTop=30;
+              document.getElementById("scroll-image").scrollTop=51;
             })
           }else{
             var snackbar=global.snackbar;
@@ -458,10 +469,10 @@ define(["components","communicate"],(components,B_)=>{
       this.load()
     },
     template:`
-    <v-container v-scroll.self="scrollHandler" id="scroll-image" class="py-0">
-      <div style="display:none;" class="drag-bar">上一页</div>
+    <v-container class="py-0" id="scroll-image">
+      <div class="drag-bar" style="display:none;margin-bottom:12px;" @click="load_prev">上一页</div>
       <lazy-loading-img :src="url" v-for="url in images.docs" style="min-height:60%"/>
-      <div v-if="images.docs.length>0" class="drag-bar">下一页</div>
+      <div v-if="images.docs.length>0" class="drag-bar" style="margin-top:12px;" @click="load_next">下一页</div>
     </v-container>
     `
   }

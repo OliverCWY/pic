@@ -86,7 +86,6 @@ define(["axios","action_chain"],(axios,action_chain)=>{
     return request(`comics/${bookId}/eps`,{page:page});
   }
   function images(args){
-    console.log(args);
     bookId=args.bookId;
     epsId=args.epsId;
     args=JSON.parse(JSON.stringify(args));
@@ -94,7 +93,6 @@ define(["axios","action_chain"],(axios,action_chain)=>{
     delete args.epsId;
     if(!args.pages)args.pages=1;
     return request(`comics/${bookId}/${epsId}/pages`,args).then((data)=>{
-      console.log(data);
       if(data.code==200){
         let cleaned=new Array();
         for(var c of data.data.pages.docs){
