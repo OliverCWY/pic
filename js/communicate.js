@@ -111,8 +111,7 @@ define(["axios","action_chain"],(axios,action_chain)=>{
   function favourites(page){
     return request("favourites",{page:page}).then((data)=>{
       if(data.code==200){
-        data=data.data.comics;
-        data.docs=clean_comics(data.docs);
+        data.data.comics.docs=clean_comics(data.data.comics.docs);
       }
       return data;
     });

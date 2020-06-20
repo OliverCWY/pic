@@ -13,7 +13,8 @@ define(["components","communicate"],(components,B_)=>{
       url_list.length=url_list.indexOf(to.fullPath);
       this.$route.meta.keep_alive=false;
     }else this.$route.meta.keep_alive=true;
-    next()
+    console.log(this.$route.fullPath,this.$route.meta.keep_alive);
+    next();
   }
   for(var key in B_){
     const key_=key;
@@ -49,7 +50,7 @@ define(["components","communicate"],(components,B_)=>{
         B.login(this.username,this.password).then((data)=>{
           if(data.code==200){
             V.snackbar.message='登陆成功';
-            snackbar.timeout=1000;
+            V.snackbar.timeout=1000;
             V.snackbar.color='success';
             setTimeout(()=>Router.push(redirect),1000);
           }else{
@@ -77,7 +78,8 @@ define(["components","communicate"],(components,B_)=>{
     }},
     methods:{
       load_comics(args){
-        this.$router.push({name:"comics",query:args})
+        console.log(args);
+        this.$router.push({name:"comics",query:args});
       },
       load(){
         loading();
@@ -100,9 +102,8 @@ define(["components","communicate"],(components,B_)=>{
       this.load()
     },
     template:`
-      <v-container>
-        <v-row>
-        <v-col cols="3" v-on:click="load_comics({favourite:1})" style="text-align:center">
+      <v-container><v-row>
+        <v-col cols="3" v-on:click="load_comics({favourites:1})" v-ripple style="text-align:center">
           <lazy-loading-img src="star.svg" aspect-ratio="1"></lazy-loading-img>
           我的收藏
         </v-col>
@@ -116,24 +117,61 @@ define(["components","communicate"],(components,B_)=>{
   "comics-page":{
     components:components,
     data:()=>{return{
-      comics:{},
-      args:{}
+      comics:{
+        docs:[]
+      },
+      loading:false
     }},
     methods:{
+      scrollHandler (e){
+        if(this.loading||this.comics.docs.length==0)return;
+        e=e.target;
+        if(e.clientHeight+e.scrollTop-e.scrollHeight>=0){
+          if(this.comics.page<this.comics.pages){
+            var args=JSON.parse(JSON.stringify(this.$route.query));
+            args.page=this.comics.page+1;
+            this.$router.replace({query:args});
+          }else{
+            var snackbar=global.snackbar;
+            snackbar.color="info";
+            snackbar.message="已是最后一页";
+            snackbar.timeout=1000;
+            snackbar.on=true;
+          }
+        }else if(e.scrollTop<=0){
+            if(this.comics.page>1){
+              var args=JSON.parse(JSON.stringify(this.$route.query));
+              args.page=this.comics.page-1;
+              this.$router.replace({query:args});
+            }else{
+              var snackbar=global.snackbar;
+              snackbar.color="info";
+              snackbar.message="已是第一页";
+              snackbar.timeout=1000;
+              snackbar.on=true;
+            }
+        }
+      },
       load(){
         loading();
-        var args=this.$route.query;
+        this.loading=true;
+        var args=JSON.parse(JSON.stringify(this.$route.query));
         if(!args.page)args.page=1;
         global.page=args.page;
         if(!args.s)args.s=global.sort;
-        this.args.s=global.sort;
         B.comics(args).then((data)=>{
+          console.log(data);
           if(data.code==200){
             global.snackbar.on=false;
             data=data.data.comics;
             this.comics=data;
             global.page=data.page;
             global.pages=data.pages;
+            setTimeout(()=>{
+              document.getElementById("scroll-comics").children[0].style.display="";
+              document.getElementById("scroll-comics").scrollTop=30;
+            })
+            this.loading=false;
           }else{
             var snackbar=global.snackbar;
             snackbar.color="error";
@@ -147,19 +185,18 @@ define(["components","communicate"],(components,B_)=>{
         this.$router.push({name:"detail",query:{bookId:bookId}})
       }
     },
-    beforeRouteEnter(to,from,next){
-      if(to.meta.keep_alive)next(V=>{global.page=V.comics.page;global.pages=V.comics.pages});
-    },
-    beforeRouteUpdate(to,from,next){
-      next();
-      this.load();
-    },
     beforeRouteLeave:keep_forward_alive,
+    beforeRouteUpdate(to,from,next){
+      console.log(to);
+      next();
+      this.load()
+    },
     beforeMount(){
       this.load()
     },
     template:`
-    <v-container>
+    <v-container id="scroll-comics" class="py-0" v-scroll.self="scrollHandler">
+      <div style="display:none;" class="drag-bar">上一页</div>
       <v-container v-for="comic in comics.docs">
         <v-row v-on:click="load_comic(comic._id)" v-ripple>
           <v-col cols="3">
@@ -178,6 +215,7 @@ define(["components","communicate"],(components,B_)=>{
         </v-row>
         <v-divider></v-divider>
       </v-container>
+      <div v-if="comics.docs.length>0" class="drag-bar">下一页</div>
     </v-container>
     `
   },

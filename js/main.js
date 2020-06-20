@@ -17,7 +17,7 @@ require(["router","communicate"],(router,b)=>{
       color:'success',
       message:''
     },
-    url_list:new Array()
+    url_list:["/"]
   }
   const app=new Vue({
     router,

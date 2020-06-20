@@ -29,7 +29,7 @@
           </v-col>
           <v-spacer>
           </v-spacer>
-          <v-col cols="2" v-if="$route.name=='comics'" style="top:4px;position:relative">
+          <v-col cols="3" v-if="$route.name=='comics'" style="top:4px;position:relative;text-align:right">
               <abbr id="_sort">{{sorts[global.sort]}}</abbr>
               <v-menu activator="#_sort" offset-y width="100%">
                 <v-list dense>
@@ -42,7 +42,7 @@
                 </v-list>
               </v-menu>
           </v-col>
-          <v-col cols="2" v-if="$route.name=='images'||$route.name=='detail'" style="top:4px;position:relative">
+          <v-col cols="3" v-if="$route.name=='images'||$route.name=='detail'" style="top:4px;position:relative;text-align:right">
               <abbr id="_quality">{{qualities[global.quality]}}</abbr>
               <v-menu activator="#_quality" offset-y width="100%">
                 <v-list dense>
