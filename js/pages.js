@@ -185,9 +185,12 @@ define(["components","communicate"],(components,B_)=>{
         this.$router.push({name:"detail",query:{bookId:bookId}})
       }
     },
+    beforeRouteEnter(to,from,next){
+      if(global.url_list.indexOf(from.fullPath)!=-1)next(vm=>{vm.load()})
+      else next();
+    },
     beforeRouteLeave:keep_forward_alive,
     beforeRouteUpdate(to,from,next){
-      console.log(to);
       next();
       this.load()
     },
@@ -308,6 +311,10 @@ define(["components","communicate"],(components,B_)=>{
       }
     },
     beforeRouteLeave:keep_forward_alive,
+    beforeRouteEnter(to,from,next){
+      if(global.url_list.indexOf(from.fullPath)!=-1)next(vm=>{vm.load()})
+      else next();
+    },
     beforeRouteUpdate(to,from,next){
       next();
       this.load()
