@@ -24,3 +24,12 @@
 .detail-buttons > .col{
   text-align:center
 }
+.drag-bar{
+  height:30px;
+  left:-12px;
+  width:calc(100% + 24px);
+  position:relative;
+  background-color:#e7dfd5;
+  text-align:center;
+  padding-top:3px;
+}
