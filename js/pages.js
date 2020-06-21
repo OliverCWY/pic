@@ -67,7 +67,7 @@ define(["components","communicate","cache","utils"],(components,B_,cache,utils)=
     },
     template:`
     <v-container>
-      <v-container style="position:relative;top:30px;transform:translateY(-50%)">
+      <v-container style="position:relative;top:30px;">
         <v-text-field clearable no-filter @keydown="(e)=>{if(e.keyCode==13)login();}" v-model="username" prepend-outer-icon="account" label="用户名"></v-text-field>
         <v-text-field clearable no-filter type="password" @keydown="(e)=>{if(e.keyCode==13)login();}" v-model="password" prepend-outer-icon="lock" label="密码"></v-text-field>
         <v-btn @click="login()" color="primary">登陆</v-btn>
