@@ -4,7 +4,7 @@ require.config({
     axios:"//cdn.jsdelivr.net/npm/axios/dist/axios.min",
   }
 });
-console.log=()=>{};
+//console.log=()=>{};
 require(["router","communicate"],(router,b)=>{
   var sort=localStorage.getItem("sort");
   var quality=localStorage.getItem("quality");

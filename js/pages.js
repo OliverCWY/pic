@@ -1,4 +1,4 @@
-define(["components","communicate"],(components,B_)=>{
+define(["components","communicate","cache"],(components,B_,cache)=>{
   json_clone=(obj)=>JSON.parse(JSON.stringify(obj));
   dict={}
   var B={};
@@ -7,7 +7,7 @@ define(["components","communicate"],(components,B_)=>{
     snackbar.color="info";
     snackbar.message="加载中";
     snackbar.on=true;
-    snackbar.timeout=undefined;
+    snackbar.timeout=-1;
   }
   function keep_forward_alive(to,from,next){
     var url_list=global.url_list;
@@ -66,10 +66,11 @@ define(["components","communicate"],(components,B_)=>{
     },
     template:`
     <v-container>
-      <h3>登陆</h3>
-      <v-text-field clearable no-filter @keydown="(e)=>{if(e.keyCode==13)login();}" v-model="username" prepend-outer-icon="account" label="用户名"></v-text-field>
-      <v-text-field clearable no-filter type="password" @keydown="(e)=>{if(e.keyCode==13)login();}" v-model="password" prepend-outer-icon="lock" label="密码"></v-text-field>
-      <v-btn @click="login()" color="primary">登陆</v-btn>
+      <v-container style="position:relative;top:20%;transform:translateY(-50%)">
+        <v-text-field clearable no-filter @keydown="(e)=>{if(e.keyCode==13)login();}" v-model="username" prepend-outer-icon="account" label="用户名"></v-text-field>
+        <v-text-field clearable no-filter type="password" @keydown="(e)=>{if(e.keyCode==13)login();}" v-model="password" prepend-outer-icon="lock" label="密码"></v-text-field>
+        <v-btn @click="login()" color="primary">登陆</v-btn>
+      </v-container>
     </v-container>
     `
   },
@@ -85,19 +86,26 @@ define(["components","communicate"],(components,B_)=>{
       },
       load(){
         loading();
-        var V=this;
-        B.categories().then((data)=>{
-          if(data.code==200){
-            V.cats=data.data.categories;
-            global.snackbar.on=false;
-          }else{
-            var snackbar=global.snackbar;
-            snackbar.message="加载失败";
-            snackbar.timeout=1000;
-            snackbar.color="error";
-            snackbar.on=true;
-          }
-        });
+        var path=this.$route.fullPath,data=cache.read(path);
+        if(data){
+          for(var i in data)this[i]=data[i];
+          global.snackbar.on=false;
+        }else{
+          var V=this;
+          B.categories().then((data)=>{
+            if(data.code==200){
+              V.cats=data.data.categories;
+              cache.write(path,this.$data);
+              global.snackbar.on=false;
+            }else{
+              var snackbar=global.snackbar;
+              snackbar.message="加载失败";
+              snackbar.timeout=1000;
+              snackbar.color="error";
+              snackbar.on=true;
+            }
+          });
+        }
       }
     },
     beforeMount(){
@@ -135,7 +143,8 @@ define(["components","communicate"],(components,B_)=>{
               var snackbar=global.snackbar;
               snackbar.color="info";
               snackbar.message="已是最后一页";
-              snackbar.timeout=1000
+              snackbar.timeout=1000;
+              snackbar.on=true;
           };
       },
       load_prev(){
@@ -153,38 +162,48 @@ define(["components","communicate"],(components,B_)=>{
       },
       load(){
         loading();
-        this.comics.docs=[];
-        this.loading=true;
-        if(document.getElementById("scroll-comics"))document.getElementById("scroll-comics").children[0].style.display="none";
-        var args=json_clone(this.$route.query);
-        if(!args.page)args.page=1;
-        global.page=args.page;
-        if(!args.s)args.s=global.sort;
-        else {
-          global.sort=args.s;
-          localStorage.setItem("sort",global.sort);
-        }
-        B.comics(args).then((data)=>{
+        var path=this.$route.fullPath,data=cache.read(path);
+        console.log(path);
+        if(data){
+          for(var i in data)this[i]=data[i];
           console.log(data);
-          if(data.code==200){
-            global.snackbar.on=false;
-            data=data.data.comics;
-            this.comics=data;
-            global.page=data.page;
-            global.pages=data.pages;
-            setTimeout(()=>{
-              document.getElementById("scroll-comics").children[0].style.display="";
-              document.getElementById("scroll-comics").scrollTop=51;
-            })
-            this.loading=false;
-          }else{
-            var snackbar=global.snackbar;
-            snackbar.color="error";
-            snackbar.timeout=1000;
-            snackbar.message="加载失败";
-            snackbar.on=true;
+          console.log(this.$data);
+          global.snackbar.on=false;
+        }else{
+          this.comics.docs=[];
+          this.loading=true;
+          if(document.getElementById("scroll-comics"))document.getElementById("scroll-comics").children[0].style.display="none";
+          var args=json_clone(this.$route.query);
+          if(!args.page)args.page=1;
+          global.page=args.page;
+          if(!args.s)args.s=global.sort;
+          else {
+            global.sort=args.s;
+            localStorage.setItem("sort",global.sort);
           }
-        });
+          B.comics(args).then((data)=>{
+            console.log(data);
+            if(data.code==200){
+              global.snackbar.on=false;
+              data=data.data.comics;
+              this.comics=data;
+              global.page=data.page;
+              global.pages=data.pages;
+              cache.write(path,this.$data);
+              setTimeout(()=>{
+                document.getElementById("scroll-comics").children[0].style.display="";
+                document.getElementById("scroll-comics").scrollTop=51;
+              })
+              this.loading=false;
+            }else{
+              var snackbar=global.snackbar;
+              snackbar.color="error";
+              snackbar.timeout=1000;
+              snackbar.message="加载失败";
+              snackbar.on=true;
+            }
+          });
+        }
       },
       load_comic(bookId){
         this.$router.push({name:"detail",query:{bookId:bookId}})
@@ -240,34 +259,41 @@ define(["components","communicate"],(components,B_)=>{
     methods:{
       load (){
         loading()
-        this.detail={};
-        this.eps.docs=[];
-        B.info(this.$route.query.bookId).then((data)=>{
-          if(data.code==200){
-            global.snackbar.on=false;
-            this.detail=data.data.comic;
-          }else{
-            var snackbar=global.snackbar;
-            snackbar.color="error";
-            snackbar.message="加载失败";
-            snackbar.timeout=1000;
-            snackbar.on=true;
-          }
-        });
-        this.eps_loading=true;
-        var V=this;
-        B.episodes(this.$route.query.bookId,1).then((data)=>{
-          if(data.code==200){
-            this.eps=data.data.eps;
-          }else{
-            var snackbar=global.snackbar;
-            snackbar.color="error";
-            snackbar.message="加载失败";
-            snackbar.timeout=1000;
-            snackbar.on=true;
-          }
-          V.eps_loading=false;
-        });
+        var path=this.$route.fullPath,data=cache.read(path);
+        if(data){
+          for(var i in data)this[i]=data[i];
+          global.snackbar.on=false;
+        }else{
+          this.detail={};
+          this.eps.docs=[];
+          B.info(this.$route.query.bookId).then((data)=>{
+            if(data.code==200){
+              global.snackbar.on=false;
+              this.detail=data.data.comic;
+              cache.write(path,this.$data);
+            }else{
+              var snackbar=global.snackbar;
+              snackbar.color="error";
+              snackbar.message="加载失败";
+              snackbar.timeout=1000;
+              snackbar.on=true;
+            }
+          });
+          this.eps_loading=true;
+          var V=this;
+          B.episodes(this.$route.query.bookId,1).then((data)=>{
+            if(data.code==200){
+              this.eps=data.data.eps;
+            }else{
+              var snackbar=global.snackbar;
+              snackbar.color="error";
+              snackbar.message="加载失败";
+              snackbar.timeout=1000;
+              snackbar.on=true;
+            }
+            V.eps_loading=false;
+          });
+        }
       },
       like(){
         loading();
@@ -428,36 +454,43 @@ define(["components","communicate"],(components,B_)=>{
       },
       load(){
         loading();
-        this.images.docs=[];
-        if(document.getElementById("scroll-image"))document.getElementById("scroll-image").children[0].style.display="none";
-        var args=json_clone(this.$route.query);
-        if(!args.page)args.page=1;
-        global.page=args.page;
-        if(!args.quality)args.quality=global.quality;
-        else{
-          global.quality=args.quality;
-          localStorage.setItem("quality",global.quality);
-        }
-        B.images(args).then((data)=>{
-          if(data.code==200){
-            global.snackbar.on=false;
-            data=data.data.pages;
-            this.images=data;
-            global.page=data.page;
-            global.pages=data.pages;
-            setTimeout(()=>{
-              document.getElementById("scroll-image").children[0].style.display="";
-              document.getElementById("scroll-image").scrollTop=51;
-            })
-          }else{
-            var snackbar=global.snackbar;
-            snackbar.color="error";
-            snackbar.timeout=1000;
-            snackbar.message="加载失败";
-            snackbar.on=true;
+        var path=this.$route.fullPath,data=cache.read(path);
+        if(data){
+          for(var i in data)this[i]=data[i];
+          global.snackbar.on=false;
+        }else{
+          this.images.docs=[];
+          if(document.getElementById("scroll-image"))document.getElementById("scroll-image").children[0].style.display="none";
+          var args=json_clone(this.$route.query);
+          if(!args.page)args.page=1;
+          global.page=args.page;
+          if(!args.quality)args.quality=global.quality;
+          else{
+            global.quality=args.quality;
+            localStorage.setItem("quality",global.quality);
           }
-          this.loading=false;
-        });
+          B.images(args).then((data)=>{
+            if(data.code==200){
+              global.snackbar.on=false;
+              data=data.data.pages;
+              this.images=data;
+              global.page=data.page;
+              global.pages=data.pages;
+              cache.write(path,this.$data);
+              setTimeout(()=>{
+                document.getElementById("scroll-image").children[0].style.display="";
+                document.getElementById("scroll-image").scrollTop=51;
+              })
+            }else{
+              var snackbar=global.snackbar;
+              snackbar.color="error";
+              snackbar.timeout=1000;
+              snackbar.message="加载失败";
+              snackbar.on=true;
+            }
+            this.loading=false;
+          });
+        }
       }
     },
     beforeRouteLeave:keep_forward_alive,

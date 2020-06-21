@@ -14,8 +14,10 @@
   <body>
     <div id="app" style="display:none"><v-app>
       <v-card id="main">
-        <v-app-bar color="#f0a1a8" dark app fixed><v-row width="100%" style="top:10px;position:relative;" no-gutters>
-          <v-col cols=7 v-if="$route.name!='images'">
+        <v-app-bar color="#f0a1a8" dark app fixed>
+          <v-toolbar-title v-if="$route.name=='login'">登陆</v-toolbar-title>
+          <v-row width="100%" style="top:10px;position:relative;" no-gutters>
+          <v-col cols=7 v-if="$route.name!='images'&&$route.name!='login'">
             <v-text-field id="_search" v-model="keyword" append-outer-icon="search" @click:append-outer="search()" @keydown.enter="search()" label="搜索"></v-text-field>
             <v-menu activator="#_search" offset-y width="100%">
               <v-list dense>
@@ -30,7 +32,13 @@
           </v-col>
           <v-spacer>
           </v-spacer>
-          <v-col cols="3" v-if="$route.name=='comics'" style="top:4px;position:relative;text-align:right;padding-right:10px;">
+          <v-col cols="1" v-if="$route.name=='images'||$route.name=='comics'">
+            <v-text-field @keydown.enter="reload_page()" v-model="global.page" width="100%"></v-text-field></v-col>
+          </v-col>
+          <v-col cols="1" v-if="$route.name=='images'||$route.name=='comics'" style="top:4px;position:relative;white-space:nowrap;">
+            /{{global.pages}}
+          </v-col>
+          <v-col cols="2" v-if="$route.name=='comics'" style="top:4px;position:relative;text-align:right;white-space:nowrap;">
               <abbr id="_sort">{{sorts[global.sort]}}</abbr>
               <v-menu activator="#_sort" offset-y width="100%">
                 <v-list dense>
@@ -43,7 +51,10 @@
                 </v-list>
               </v-menu>
           </v-col>
-          <v-col cols="3" v-if="$route.name=='images'||$route.name=='detail'" style="top:4px;position:relative;text-align:right；padding-right:10px;">
+          <v-col cols="2" v-if="$route.name=='main'" style="top:4px;position:relative;text-align:right;white-space:nowrap;">
+              <abbr onclick="localStorage.clear();location.reload()">清除缓存</abbr>
+          </v-col>
+          <v-col cols="2" v-if="$route.name=='images'||$route.name=='detail'" style="top:4px;position:relative;text-align:right">
               <abbr id="_quality">{{qualities[global.quality]}}</abbr>
               <v-menu activator="#_quality" offset-y width="100%">
                 <v-list dense>
@@ -55,12 +66,6 @@
                   </v-list-item>
                 </v-list>
               </v-menu>
-          </v-col>
-          <v-col cols="1" v-if="$route.name=='images'||$route.name=='comics'">
-            <v-text-field @keydown.enter="reload_page()" v-model="global.page" width="100%"></v-text-field></v-col>
-          </v-col>
-          <v-col cols="1" v-if="$route.name=='images'||$route.name=='comics'" style="top:4px;position:relative;white-space:nowrap;">
-            /{{global.pages}}
           </v-col>
         </v-row></v-app-bar>
         <keep-alive><router-view v-if="$route.meta.keep_alive"></router-view></keep-alive>
