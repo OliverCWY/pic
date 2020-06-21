@@ -1,5 +1,6 @@
-define(["components","communicate","cache"],(components,B_,cache)=>{
-  json_clone=(obj)=>JSON.parse(JSON.stringify(obj));
+define(["components","communicate","cache","utils"],(components,B_,cache,utils)=>{
+  utils.disable_log_deployed();
+  json_clone=utils.json_clone;
   dict={}
   var B={};
   function loading(){
@@ -130,7 +131,8 @@ define(["components","communicate","cache"],(components,B_,cache)=>{
       comics:{
         docs:[]
       },
-      loading:false
+      loading:false,
+      scrollTop:51
     }},
     methods:{
       load_next(){
@@ -205,13 +207,16 @@ define(["components","communicate","cache"],(components,B_,cache)=>{
           });
         }
       },
+      scrollHandler(){
+        this.scrollTop=document.getElementById("scroll-comics").scrollTop;
+      },
       load_comic(bookId){
         this.$router.push({name:"detail",query:{bookId:bookId}})
       }
     },
     beforeRouteEnter(to,from,next){
       if(global.url_list.indexOf(from.fullPath)!=-1)next(vm=>{vm.load()})
-      else next();
+      else next((vm)=>{if(document.getElementById("scroll-comics"))document.getElementById("scroll-comics").scrollTop=vm.scrollTop;});
     },
     beforeRouteLeave:keep_forward_alive,
     beforeRouteUpdate(to,from,next){
@@ -222,7 +227,7 @@ define(["components","communicate","cache"],(components,B_,cache)=>{
       this.load()
     },
     template:`
-    <v-container class="py-0" id="scroll-comics">
+    <v-container class="py-0" id="scroll-comics" v-scroll.self="scrollHandler">
       <div style="display:none;margin-bottom:12px" class="drag-bar" @click="load_prev">上一页</div>
       <v-container v-for="comic in comics.docs">
         <v-row v-on:click="load_comic(comic._id)" v-ripple>
@@ -263,6 +268,7 @@ define(["components","communicate","cache"],(components,B_,cache)=>{
         if(data){
           for(var i in data)this[i]=data[i];
           global.snackbar.on=false;
+          console.log(data);
         }else{
           this.detail={};
           this.eps.docs=[];

@@ -1,11 +1,13 @@
+const debug=location.href.indexOf("//localhost")!=-1;
 require.config({
-  baseUrl:"js",
+  baseUrl:debug?"js":"//cdn.jsdelivr.net/gh/OliverCWY/pic@latest/js/",
   paths:{
     axios:"//cdn.jsdelivr.net/npm/axios/dist/axios.min",
+    jszip:"//cdn.jsdelivr.net/gh/Stuk/jszip@3.5.0/dist/jszip.min"
   }
 });
-//console.log=()=>{};
-require(["router","communicate"],(router,b)=>{
+require(["router","communicate","utils","zip"],(router,b,utils,zip)=>{
+  var json_clone=utils.json_clone;
   var sort=localStorage.getItem("sort");
   var quality=localStorage.getItem("quality");
   if(!sort)sort="dd";
@@ -21,7 +23,13 @@ require(["router","communicate"],(router,b)=>{
       color:'success',
       message:''
     },
-    url_list:["/"]
+    url_list:["/"],
+    progress_bar:{
+      active:false,
+      indeterminate:false,
+      value:0,
+      striped:false
+    }
   }
   localStorage.setItem("sort",sort);
   localStorage.setItem("quality",quality);
@@ -46,6 +54,57 @@ require(["router","communicate"],(router,b)=>{
       global:window.global
     },
     methods:{
+      download_episode(){
+        var args=json_clone(this.$route.query);
+        args.quality=global.quality;
+        args.page=99999;
+        var array=new Array();
+        var i=0;
+        var next=()=>{};
+        var pages=100,title="";
+        next=(data)=>{
+          if(data)pages=data.data.pages;
+          global.progress_bar.value=i/pages*100;
+          i+=1;
+          if(i>1){
+            for(var image of data.data.pages.docs)
+              array.push({name:(array.length+1)+".jpg",url:"https://cors-anywhere.herokuapp.com/"+image})
+          }
+          args.page=i;
+          if(i==1||i<=data.data.pages.pages)
+            b.images(args).then(next);
+          else{
+            global.progress_bar.value=100;
+            zip.zip_urls(array,3,(i,len)=>{
+              if(i==len)
+                global.progress_bar={
+                  active:true,
+                  value:0,
+                  striped:false,
+                  indeterminate:true
+                }
+              else{
+                global.progress_bar.striped=true;
+                global.progress_bar.value=i/len*100;
+              }
+            }).then(blob=>{
+              global.progress_bar.active=false;
+              utils.download_blob(title+".zip",blob)
+            });
+          }
+        }
+        global.progress_bar={
+          active:true,
+          value:0,
+          striped:true,
+          indeterminate:false
+        }
+        b.images(args).then(data=>{
+          data=data.data;;
+          title=data.ep.title;pages=data.pages.pages;
+          next();
+        })
+      },
       search (){
         const query={keyword:this.keyword,search:1};
         this.$router.push({name:"comics",query:query})

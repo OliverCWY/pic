@@ -15,7 +15,19 @@
     <div id="app" style="display:none"><v-app>
       <v-card id="main">
         <v-app-bar color="#f0a1a8" dark app fixed>
+          <v-progress-linear
+            :active="global.progress_bar.active"
+            :indeterminate="global.progress_bar.indeterminate"
+            :value="global.progress_bar.value"
+            absolute
+            bottom
+            color="pink"
+            :striped="global.progress_bar.striped"
+          ></v-progress-linear>
           <v-toolbar-title v-if="$route.name=='login'">登陆</v-toolbar-title>
+          <v-col cols="2" v-if="$route.name=='images'" style="top:4px;position:relative;" @click="download_episode">
+              下载
+          </v-col>
           <v-row width="100%" style="top:10px;position:relative;" no-gutters>
           <v-col cols=7 v-if="$route.name!='images'&&$route.name!='login'">
             <v-text-field id="_search" v-model="keyword" append-outer-icon="search" @click:append-outer="search()" @keydown.enter="search()" label="搜索"></v-text-field>

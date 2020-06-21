@@ -1,4 +1,4 @@
-define(["axios","action_chain"],(axios,action_chain)=>{
+define(["axios",],(axios,)=>{
   const api_host="//picaapis100.herokuapp.com/";
   let token=localStorage.getItem("token");
   function request(path,data){
@@ -7,12 +7,16 @@ define(["axios","action_chain"],(axios,action_chain)=>{
     let session=axios.get(api_host+"/"+path,{
       params:data
     });
+    /*
     let actions=new action_chain((data)=>{
       if(data.code==401)token=null;
       return data.data;
+    });*/
+    //session.then((data)=>{actions.run(data);});
+    return session.then((data)=>{
+      if(data.code==401)token=null;
+      return data.data;
     });
-    session.then((data)=>{actions.run(data);});
-    return actions;
   }
   function find_image(image){
     return ((image.fileServer!="https://wikawika.xyz/static/")?image.fileServer+"/static/":image.fileServer)+image.path;
