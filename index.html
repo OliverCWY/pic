@@ -25,7 +25,7 @@
             :striped="global.progress_bar.striped"
           ></v-progress-linear>
           <v-toolbar-title v-if="$route.name=='login'">登陆</v-toolbar-title>
-          <v-col cols="2" v-if="$route.name=='images'" style="top:4px;position:relative;" @click="download_episode">
+          <v-col cols="4" v-if="$route.name=='images'" style="top:4px;position:relative;" @click="download_episode">
               下载
           </v-col>
           <v-row width="100%" style="top:10px;position:relative;" no-gutters>
