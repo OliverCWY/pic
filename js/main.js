@@ -6,7 +6,7 @@ require.config({
     jszip:"//cdn.jsdelivr.net/gh/Stuk/jszip@3.5.0/dist/jszip.min"
   }
 });
-require(["router","communicate","utils","zip"],(router,b,utils,zip)=>{
+require(["router","communicate","utils","tar"],(router,b,utils,tar)=>{
   var json_clone=utils.json_clone;
   var sort=localStorage.getItem("sort");
   var quality=localStorage.getItem("quality");
@@ -75,7 +75,7 @@ require(["router","communicate","utils","zip"],(router,b,utils,zip)=>{
             b.images(args).then(next);
           else{
             global.progress_bar.value=100;
-            zip.zip_urls(array,3,(i,len)=>{
+            tar.from_urls(array,3,(i,len)=>{
               if(i==len)
                 global.progress_bar={
                   active:true,

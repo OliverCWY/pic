@@ -19,10 +19,9 @@ define(["components","communicate","cache","utils"],(components,B_,cache,utils)=
     console.log(this.$route.fullPath,this.$route.meta.keep_alive);
     next();
   }
-  for(var key in B_){
-    const key_=key;
+  for(const key in B_){
     if(key!="login"&&key!="authorised")
-      B[key]=(a,b,c)=>{return B_[key_](a,b,c).then((data)=>{
+      B[key]=(a,b,c)=>{return B_[key](a,b,c).then((data)=>{
         var snackbar=global.snackbar;
         if(data.code==401){
           snackbar.message="登录信息失效";

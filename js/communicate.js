@@ -7,12 +7,6 @@ define(["axios",],(axios,)=>{
     let session=axios.get(api_host+"/"+path,{
       params:data
     });
-    /*
-    let actions=new action_chain((data)=>{
-      if(data.code==401)token=null;
-      return data.data;
-    });*/
-    //session.then((data)=>{actions.run(data);});
     return session.then((data)=>{
       if(data.code==401)token=null;
       return data.data;
